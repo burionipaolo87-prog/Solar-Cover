@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Solar Cover">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="solar-icon-180.png">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Solar Projection">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="solar-icon-180.png">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solar Ray Projector</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #11111a;
+    --surface2: #18182a;
+    --gold: #f0c040;
+    --gold2: #d4a820;
+    --amber: #ff9820;
+    --text: #e8e0cc;
+    --muted: #7a7060;
+    --accent: #4af0c8;
+    --border: #2a2a3a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Starfield background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 15%, rgba(240,192,64,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 45%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 20%, rgba(255,255,255,0.15) 0%, transparent 100%),
+      radial-gradient(1px 1px at 75% 60%, rgba(240,192,64,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 100%),
+      radial-gradient(1px 1px at 65% 85%, rgba(240,192,64,0.2) 0%, transparent 100%),
+      radial-gradient(2px 2px at 45% 70%, rgba(255,255,255,0.1) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 40px 20px 60px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .sun-icon {
+    display: inline-block;
+    width: 56px;
+    height: 56px;
+    margin-bottom: 16px;
+    animation: rotateSun 20s linear infinite;
+  }
+
+  @keyframes rotateSun {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(1.1rem, 4vw, 1.6rem);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(240,192,64,0.4);
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 1.05rem;
+    color: var(--muted);
+    font-style: italic;
+    letter-spacing: 0.05em;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold2), transparent);
+  }
+
+  .card-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold2);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field.full { grid-column: 1 / -1; }
+
+  label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    padding: 10px 14px;
+    width: 100%;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  input:focus {
+    border-color: var(--gold2);
+    box-shadow: 0 0 0 2px rgba(240,192,64,0.1);
+  }
+
+  input::placeholder { color: var(--muted); opacity: 0.5; }
+
+  input[type="date"], input[type="time"] {
+    color-scheme: dark;
+  }
+
+  .hint {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: 2px;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--gold2), var(--amber));
+    border: none;
+    border-radius: 2px;
+    color: #0a0a0f;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 4px 20px rgba(212,168,32,0.25);
+    margin-top: 8px;
+  }
+
+  .btn:hover {
+    opacity: 0.92;
+    box-shadow: 0 6px 28px rgba(212,168,32,0.4);
+  }
+
+  .btn:active { transform: scale(0.99); }
+
+  /* Results */
+  #results {
+    display: none;
+    animation: fadeUp 0.5s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .result-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 16px 20px;
+  }
+
+  .result-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .result-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .result-value.gold { color: var(--gold); }
+
+  .coord-display {
+    background: var(--surface2);
+    border: 1px solid var(--gold2);
+    border-radius: 2px;
+    padding: 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .coord-display::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(240,192,64,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .coord-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold2);
+    margin-bottom: 12px;
+  }
+
+  .coord-main {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(0.85rem, 3vw, 1.15rem);
+    color: var(--gold);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 20px rgba(240,192,64,0.4);
+    margin-bottom: 8px;
+  }
+
+  .coord-decimal {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .copy-btn:hover { color: var(--gold2); border-color: var(--gold2); }
+
+  .map-link {
+    display: block;
+    margin-top: 12px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--accent);
+    text-decoration: none;
+    font-style: italic;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+  }
+
+  .map-link:hover { opacity: 1; }
+
+  .error-msg {
+    background: rgba(255,60,60,0.08);
+    border: 1px solid rgba(255,60,60,0.3);
+    border-radius: 2px;
+    padding: 14px 18px;
+    font-size: 0.85rem;
+    color: #ff8080;
+    display: none;
+    margin-top: 12px;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  @media (max-width: 480px) {
+    .field-grid { grid-template-columns: 1fr; }
+    .result-row { grid-template-columns: 1fr; }
+    .card { padding: 20px; }
+  }
+
+/* iPhone optimization */
+html,body{min-height:100%;}
+body{padding:0!important;-webkit-tap-highlight-color:transparent;}
+.container,.app,.wrapper,main{max-width:720px!important;margin:0 auto!important;}
+input,select,button,textarea{font-size:16px!important;min-height:44px;border-radius:14px!important;}
+button,a.btn{min-height:48px!important;padding:12px 16px!important;font-weight:600;}
+.card,.panel,section{border-radius:18px!important;}
+@media (max-width: 700px){
+  body{padding-bottom:calc(env(safe-area-inset-bottom) + 24px)!important;padding-left:max(12px, env(safe-area-inset-left))!important;padding-right:max(12px, env(safe-area-inset-right))!important;padding-top:max(12px, env(safe-area-inset-top))!important;}
+  h1{font-size:1.45rem!important;line-height:1.15!important;}
+  h2{font-size:1.1rem!important;}
+  .grid,.row,.form-row{display:block!important;}
+  .grid > *, .row > *, .form-row > *{width:100%!important;margin-bottom:12px!important;}
+  table{display:block;overflow:auto;white-space:nowrap;}
+  .sticky-actions{position:sticky;bottom:0;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);padding:10px 0 calc(env(safe-area-inset-bottom) + 6px);}
+}
+
+
+/* iPhone + GitHub Pages optimization */
+html{height:100%;}
+body{min-height:100%;padding:0!important;-webkit-tap-highlight-color:transparent;}
+input,select,button,textarea{font-size:16px!important;min-height:44px;border-radius:14px!important;}
+button,a.btn{min-height:48px!important;padding:12px 16px!important;font-weight:600;}
+a{word-break:break-word;}
+@media (max-width:700px){body{padding-top:max(12px,env(safe-area-inset-top))!important;padding-right:max(12px,env(safe-area-inset-right))!important;padding-bottom:max(18px,env(safe-area-inset-bottom))!important;padding-left:max(12px,env(safe-area-inset-left))!important;}h1{font-size:1.45rem!important;line-height:1.15!important;}h2{font-size:1.08rem!important;line-height:1.2!important;}.grid,.row,.form-row,[class*="grid"],[class*="row"]{display:block!important;}.grid > *, .row > *, .form-row > *, [class*="grid"] > *, [class*="row"] > *{width:100%!important;max-width:100%!important;margin-bottom:12px!important;}table{display:block;overflow:auto;white-space:nowrap;max-width:100%;}}
+
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <svg class="sun-icon" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="28" cy="28" r="10" fill="#f0c040" opacity="0.9"/>
+      <g stroke="#f0c040" stroke-width="1.5" stroke-linecap="round" opacity="0.7">
+        <line x1="28" y1="4" x2="28" y2="12"/>
+        <line x1="28" y1="44" x2="28" y2="52"/>
+        <line x1="4" y1="28" x2="12" y2="28"/>
+        <line x1="44" y1="28" x2="52" y2="28"/>
+        <line x1="11.5" y1="11.5" x2="17.5" y2="17.5"/>
+        <line x1="38.5" y1="38.5" x2="44.5" y2="44.5"/>
+        <line x1="44.5" y1="11.5" x2="38.5" y2="17.5"/>
+        <line x1="17.5" y1="38.5" x2="11.5" y2="44.5"/>
+      </g>
+    </svg>
+    <h1>Solar Ray Cover</h1>
+    <p class="subtitle">Posizione drone rispetto a un osservatore</p>
+  </header>
+
+  <div class="card">
+    <div class="card-title">📍 Posizione dell'osservatore</div>
+    <div class="field-grid">
+      <div class="field">
+        <label>Latitudine</label>
+        <input type="text" id="lat" placeholder="41°44'18.56&quot;N o 41.7385" value="41°44'18.56&quot;N">
+      </div>
+      <div class="field">
+        <label>Longitudine</label>
+        <input type="text" id="lon" placeholder="12°14'48.69&quot;E o 12.2469" value="12°14'48.69&quot;E">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">☀️ Parametri solari</div>
+    <div class="field-grid">
+      <div class="field">
+        <label>Data</label>
+        <input type="date" id="date" value="2026-08-13">
+      </div>
+      <div class="field">
+        <label>Ora locale</label>
+        <input type="time" id="time" value="16:18">
+      </div>
+      <div class="field full">
+        <label>Quota target (metri sul suolo)</label>
+        <input type="number" id="altitude" placeholder="es. 300" value="300" min="1">
+        <span class="hint">Altitudine a cui deve volare il drone</span>
+      </div>
+    </div>
+    <button class="btn" onclick="calculate()">▶ Calcola proiezione</button>
+    <div class="error-msg" id="error"></div>
+  </div>
+
+  <div id="results">
+    <div class="card">
+      <div class="card-title">📐 Dati astronomici</div>
+      <div class="result-row">
+        <div class="result-box">
+          <div class="result-label">Elevazione solare</div>
+          <div class="result-value gold" id="res-elevation">—</div>
+        </div>
+        <div class="result-box">
+          <div class="result-label">Azimut solare</div>
+          <div class="result-value gold" id="res-azimuth">—</div>
+        </div>
+        <div class="result-box">
+          <div class="result-label">Distanza orizzontale</div>
+          <div class="result-value" id="res-distance">—</div>
+        </div>
+        <div class="result-box">
+          <div class="result-label">Ora solare vera</div>
+          <div class="result-value" id="res-solartime">—</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="coord-display">
+        <div class="coord-label">📍 Coordinate dove posizionare il drone</div>
+        <div class="coord-main" id="res-coord-dms">—</div>
+        <div class="coord-decimal" id="res-coord-dd">—</div>
+        <button class="copy-btn" onclick="copyCoords()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copia coordinate
+        </button>
+        <a class="map-link" id="map-link" href="#" target="_blank">→ Apri su Google Maps</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Parse DMS or decimal degrees
+function parseDeg(str) {
+  str = str.trim();
+  // Decimal
+  if (/^-?[\d.]+$/.test(str)) return parseFloat(str);
+  // DMS: 41°44'18.56"N
+  const m = str.match(/(\d+)[°d]\s*(\d+)[\'′]\s*([\d.]+)[\"″]?\s*([NSEW]?)/i);
+  if (m) {
+    let d = parseFloat(m[1]) + parseFloat(m[2])/60 + parseFloat(m[3])/3600;
+    if (m[4] && /[SW]/i.test(m[4])) d = -d;
+    return d;
+  }
+  return NaN;
+}
+
+function toRad(d) { return d * Math.PI / 180; }
+function toDeg(r) { return r * 180 / Math.PI; }
+
+function decToDMS(deg, isLat) {
+  const abs = Math.abs(deg);
+  const d = Math.floor(abs);
+  const mAll = (abs - d) * 60;
+  const m = Math.floor(mAll);
+  const s = ((mAll - m) * 60).toFixed(2);
+  const dir = isLat ? (deg >= 0 ? 'N' : 'S') : (deg >= 0 ? 'E' : 'W');
+  return `${d}°${m}'${s}"${dir}`;
+}
+
+function dayOfYear(date) {
+  const start = new Date(date.getFullYear(), 0, 0);
+  const diff = date - start;
+  return Math.floor(diff / 86400000);
+}
+
+function eqOfTime(n) {
+  // Minutes
+  return 9.873 * Math.sin(4*Math.PI/365.242*(n-81)) - 7.655 * Math.sin(2*Math.PI/365.242*(n-1));
+}
+
+function solarDeclination(n) {
+  return 23.45 * Math.sin(toRad(360/365*(284+n)));
+}
+
+function calculate() {
+  const errEl = document.getElementById('error');
+  errEl.style.display = 'none';
+
+  const latRaw = document.getElementById('lat').value;
+  const lonRaw = document.getElementById('lon').value;
+  const dateVal = document.getElementById('date').value;
+  const timeVal = document.getElementById('time').value;
+  const altTarget = parseFloat(document.getElementById('altitude').value);
+
+  const lat = parseDeg(latRaw);
+  const lon = parseDeg(lonRaw);
+
+  if (isNaN(lat) || isNaN(lon)) {
+    showError('Coordinate non valide. Usa formato 41°44\'18.56"N oppure 41.7385');
+    return;
+  }
+  if (!dateVal || !timeVal) {
+    showError('Inserisci data e ora.');
+    return;
+  }
+  if (isNaN(altTarget) || altTarget <= 0) {
+    showError('Inserisci una quota valida (> 0 metri).');
+    return;
+  }
+
+  // Parse date/time
+  const [year, month, day] = dateVal.split('-').map(Number);
+  const [hour, minute] = timeVal.split(':').map(Number);
+
+  // UTC offset Italy: CET=+1, CEST=+2 (summer: last Sun March – last Sun Oct)
+  const localDate = new Date(year, month-1, day, hour, minute, 0);
+  const utcOffset = getItalyUTCOffset(localDate);
+
+  const n = dayOfYear(new Date(year, month-1, day));
+  const δ = solarDeclination(n);
+  const EqT = eqOfTime(n);
+
+  // Solar time
+  const lonCorrection = (lon - 15 * utcOffset) * 4; // minutes
+  const solarMinutes = hour * 60 + minute + lonCorrection + EqT;
+  const solarH = Math.floor(solarMinutes / 60);
+  const solarM = Math.round(solarMinutes % 60);
+
+  // Hour angle H (degrees)
+  const H = (solarMinutes / 60 - 12) * 15;
+
+  // Elevation
+  const sinAlpha = Math.sin(toRad(lat))*Math.sin(toRad(δ)) +
+                   Math.cos(toRad(lat))*Math.cos(toRad(δ))*Math.cos(toRad(H));
+  const alpha = toDeg(Math.asin(sinAlpha));
+
+  if (alpha <= 0) {
+    showError(`Il sole è sotto l'orizzonte (elevazione: ${alpha.toFixed(1)}°). Scegli un'ora diversa.`);
+    return;
+  }
+
+  // Azimuth
+  const cosAz = (Math.sin(toRad(δ)) - sinAlpha*Math.sin(toRad(lat))) /
+                (Math.cos(toRad(alpha))*Math.cos(toRad(lat)));
+  let az = toDeg(Math.acos(Math.max(-1, Math.min(1, cosAz))));
+  if (H > 0) az = 360 - az; // afternoon: sun is west
+
+  // Horizontal distance
+  const d = altTarget / Math.tan(toRad(alpha)); // meters
+
+  // Displacement
+  const dLat = d * Math.cos(toRad(az)) / 111320;
+  const dLon = d * Math.sin(toRad(az)) / (111320 * Math.cos(toRad(lat)));
+
+  const projLat = lat + dLat;
+  const projLon = lon + dLon;
+
+  // Display
+  document.getElementById('res-elevation').textContent = alpha.toFixed(2) + '°';
+  document.getElementById('res-azimuth').textContent = az.toFixed(1) + '° (' + azDir(az) + ')';
+  document.getElementById('res-distance').textContent = d.toFixed(1) + ' m';
+  const sh = String(solarH).padStart(2,'0');
+  const sm = String(Math.abs(solarM)).padStart(2,'0');
+  document.getElementById('res-solartime').textContent = sh + ':' + sm;
+
+  const dmsLat = decToDMS(projLat, true);
+  const dmsLon = decToDMS(projLon, false);
+  document.getElementById('res-coord-dms').textContent = dmsLat + '  ' + dmsLon;
+  document.getElementById('res-coord-dd').textContent =
+    projLat.toFixed(6) + '°, ' + projLon.toFixed(6) + '°';
+
+  const mapUrl = `https://www.google.com/maps?q=${projLat.toFixed(6)},${projLon.toFixed(6)}`;
+  document.getElementById('map-link').href = mapUrl;
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function getItalyUTCOffset(date) {
+  // CEST (UTC+2): last Sun March to last Sun Oct
+  const year = date.getFullYear();
+  const lastSunMarch = lastSunday(year, 2);
+  const lastSunOct = lastSunday(year, 9);
+  return (date >= lastSunMarch && date < lastSunOct) ? 2 : 1;
+}
+
+function lastSunday(year, month) {
+  // month: 0-based
+  const d = new Date(year, month+1, 0); // last day of month
+  d.setDate(d.getDate() - d.getDay());
+  return d;
+}
+
+function azDir(az) {
+  const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
+  return dirs[Math.round(az/22.5) % 16];
+}
+
+function showError(msg) {
+  const el = document.getElementById('error');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('results').style.display = 'none';
+}
+
+function copyCoords() {
+  const text = document.getElementById('res-coord-dms').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    const orig = btn.innerHTML;
+    btn.textContent = '✓ Copiato!';
+    setTimeout(() => { btn.innerHTML = orig; }, 1800);
+  });
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('input').forEach(el=>{
+    const name=((el.name||'')+' '+(el.id||'')+' '+(el.placeholder||'')).toLowerCase();
+    if(/lat|lon|long|coord|quota|alt|metri|target/.test(name)){
+      el.setAttribute('inputmode','decimal');
+      el.setAttribute('autocomplete','off');
+      if(!el.getAttribute('step')) el.setAttribute('step','any');
+    }
+    if(/ora|time/.test(name)) el.setAttribute('inputmode','numeric');
+  });
+  document.querySelectorAll('a').forEach(a=>{
+    if(a.textContent && /google maps/i.test(a.textContent)) { a.setAttribute('target','_blank'); a.setAttribute('rel','noopener noreferrer'); }
+  });
+  const copyBtns=[...document.querySelectorAll('button')].filter(b=>/copia coordinate/i.test(b.textContent));
+  copyBtns.forEach(btn=>btn.addEventListener('click',()=>{
+    const old=btn.textContent; setTimeout(()=>{btn.textContent='Coordinate copiate'; setTimeout(()=>btn.textContent=old,1200)},50);
+  }));
+});
+</script>
+
+<script>document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('input').forEach(el=>{const s=((el.name||'')+' '+(el.id||'')+' '+(el.placeholder||'')+' '+(el.labels?.[0]?.textContent||'')).toLowerCase();if(/lat|lon|long|coord|quota|alt|metri|target/.test(s)){el.setAttribute('inputmode','decimal');el.setAttribute('autocomplete','off');if(!el.getAttribute('step')) el.setAttribute('step','any');}if(/ora|time/.test(s)){el.setAttribute('inputmode','numeric');}});document.querySelectorAll('a').forEach(a=>{if(/google maps/i.test(a.textContent||'')){a.setAttribute('target','_blank');a.setAttribute('rel','noopener noreferrer');}});[...document.querySelectorAll('button')].filter(b=>/copia coordinate/i.test(b.textContent||'')).forEach(btn=>{btn.addEventListener('click',()=>{const old=btn.textContent;setTimeout(()=>{btn.textContent='Coordinate copiate';setTimeout(()=>btn.textContent=old,1400)},80);});});});</script>
+</body>
+</html>
