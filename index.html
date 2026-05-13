@@ -1,24 +1,17 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Solar Cover">
+    <meta name="apple-mobile-web-app-title" content="SunCover">
     <meta name="theme-color" content="#0f172a">
-    <link rel="apple-touch-icon" href="solar-icon-180.png">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Solar Projection">
-    <meta name="theme-color" content="#0f172a">
-    <link rel="apple-touch-icon" href="solar-icon-180.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Solar Ray Projector</title>
+<title>SunCover</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -382,15 +375,6 @@ button,a.btn{min-height:48px!important;padding:12px 16px!important;font-weight:6
   .sticky-actions{position:sticky;bottom:0;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);padding:10px 0 calc(env(safe-area-inset-bottom) + 6px);}
 }
 
-
-/* iPhone + GitHub Pages optimization */
-html{height:100%;}
-body{min-height:100%;padding:0!important;-webkit-tap-highlight-color:transparent;}
-input,select,button,textarea{font-size:16px!important;min-height:44px;border-radius:14px!important;}
-button,a.btn{min-height:48px!important;padding:12px 16px!important;font-weight:600;}
-a{word-break:break-word;}
-@media (max-width:700px){body{padding-top:max(12px,env(safe-area-inset-top))!important;padding-right:max(12px,env(safe-area-inset-right))!important;padding-bottom:max(18px,env(safe-area-inset-bottom))!important;padding-left:max(12px,env(safe-area-inset-left))!important;}h1{font-size:1.45rem!important;line-height:1.15!important;}h2{font-size:1.08rem!important;line-height:1.2!important;}.grid,.row,.form-row,[class*="grid"],[class*="row"]{display:block!important;}.grid > *, .row > *, .form-row > *, [class*="grid"] > *, [class*="row"] > *{width:100%!important;max-width:100%!important;margin-bottom:12px!important;}table{display:block;overflow:auto;white-space:nowrap;max-width:100%;}}
-
 </style>
 </head>
 <body>
@@ -410,7 +394,7 @@ a{word-break:break-word;}
         <line x1="17.5" y1="38.5" x2="11.5" y2="44.5"/>
       </g>
     </svg>
-    <h1>Solar Ray Cover</h1>
+    <h1>SunCover</h1>
     <p class="subtitle">Posizione drone rispetto a un osservatore</p>
   </header>
 
@@ -419,11 +403,11 @@ a{word-break:break-word;}
     <div class="field-grid">
       <div class="field">
         <label>Latitudine</label>
-        <input type="text" id="lat" placeholder="41°44'18.56&quot;N o 41.7385" value="41°44'18.56&quot;N">
+        <input type="text" id="lat" placeholder="41°44'18.56&quot;N o 41.7385" value="41°53'24.8&quot;N">
       </div>
       <div class="field">
         <label>Longitudine</label>
-        <input type="text" id="lon" placeholder="12°14'48.69&quot;E o 12.2469" value="12°14'48.69&quot;E">
+        <input type="text" id="lon" placeholder="12°14'48.69&quot;E o 12.2469" value="12°29'32.3&quot;E">
       </div>
     </div>
   </div>
@@ -433,11 +417,11 @@ a{word-break:break-word;}
     <div class="field-grid">
       <div class="field">
         <label>Data</label>
-        <input type="date" id="date" value="2026-08-13">
+        <input type="date" id="date" value="2026-01-01">
       </div>
       <div class="field">
         <label>Ora locale</label>
-        <input type="time" id="time" value="16:18">
+        <input type="time" id="time" value="12:00">
       </div>
       <div class="field full">
         <label>Quota target (metri sul suolo)</label>
@@ -684,7 +668,14 @@ document.addEventListener('DOMContentLoaded',()=>{
   }));
 });
 </script>
-
-<script>document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('input').forEach(el=>{const s=((el.name||'')+' '+(el.id||'')+' '+(el.placeholder||'')+' '+(el.labels?.[0]?.textContent||'')).toLowerCase();if(/lat|lon|long|coord|quota|alt|metri|target/.test(s)){el.setAttribute('inputmode','decimal');el.setAttribute('autocomplete','off');if(!el.getAttribute('step')) el.setAttribute('step','any');}if(/ora|time/.test(s)){el.setAttribute('inputmode','numeric');}});document.querySelectorAll('a').forEach(a=>{if(/google maps/i.test(a.textContent||'')){a.setAttribute('target','_blank');a.setAttribute('rel','noopener noreferrer');}});[...document.querySelectorAll('button')].filter(b=>/copia coordinate/i.test(b.textContent||'')).forEach(btn=>{btn.addEventListener('click',()=>{const old=btn.textContent;setTimeout(()=>{btn.textContent='Coordinate copiate';setTimeout(()=>btn.textContent=old,1400)},80);});});});</script>
+<script>
+if ('serviceWorker' in navigator && !location.hostname.includes('claudeusercontent')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('SW registered'))
+      .catch(e => console.log('SW error:', e));
+  });
+}
+</script>
 </body>
 </html>
