@@ -555,7 +555,7 @@ button,a.btn{min-height:48px!important;padding:12px 16px!important;font-weight:6
   <div class="info-box">
     <div class="info-title">Solar Ray Cover</div>
     <div class="info-text"><strong>Creato da M.G.74 · © 2026</strong></div>
-    <div class="info-small">Applicazione locale per il calcolo della posizione del drone rispetto a un osservatore e alla direzione solare.<br><br>I dati inseriti non vengono salvati. Il GPS viene usato solo se tocchi “Usa posizione attuale”. Se calcoli la quota corretta del drone, le coordinate dell’obiettivo e dell’area di decollo vengono inviate solo in quel momento a un servizio esterno di elevazione per ricavare le quote s.l.m. Se apri Google Maps, le coordinate vengono inviate a Google solo in quel momento.</div>
+    <div class="info-small">Applicazione locale per il calcolo della posizione del drone rispetto a un osservatore e alla direzione solare.<br><br>I dati inseriti non vengono salvati. Il GPS viene usato solo se tocchi “Usa posizione attuale”. Se calcoli la quota corretta del drone e non inserisci quote manuali, le coordinate dell’obiettivo e dell’area di decollo vengono inviate solo in quel momento a un servizio esterno di elevazione per ricavare le quote s.l.m. Se apri Google Maps, le coordinate vengono inviate a Google solo in quel momento.</div>
     <button class="info-close" onclick="closeInfoModal()">OK</button>
   </div>
 </div>
@@ -599,21 +599,31 @@ button,a.btn{min-height:48px!important;padding:12px 16px!important;font-weight:6
 
 
   <div class="card">
-    <div class="card-title">🚁 Area di decollo</div>
+    <div class="card-title">🚁 Area di decollo (opzionale)</div>
     <div class="field-grid">
       <div class="field">
         <label>Latitudine decollo</label>
-        <input type="text" id="takeoff-lat" placeholder="41°44'18.56&quot;N o 41.7385" value="">
+        <input type="text" id="takeoff-lat" placeholder="opzionale: 41°44'18.56&quot;N o 41.7385" value="">
       </div>
       <div class="field">
         <label>Longitudine decollo</label>
-        <input type="text" id="takeoff-lon" placeholder="12°14'48.69&quot;E o 12.2469" value="">
+        <input type="text" id="takeoff-lon" placeholder="opzionale: 12°14'48.69&quot;E o 12.2469" value="">
       </div>
     </div>
     <div class="small-actions">
       <button class="small-btn" onclick="copyObserverToTakeoff()">↔ Copia coordinate osservatore</button>
     </div>
-    <div class="result-note">Le quote s.l.m. di obiettivo e decollo vengono ricavate automaticamente dalle coordinate tramite un servizio online di elevazione.</div>
+    <div class="field-grid" style="margin-top:16px">
+      <div class="field">
+        <label>Quota obiettivo s.l.m. manuale</label>
+        <input type="number" id="manual-objective-elevation" placeholder="opzionale, es. 140" step="0.1">
+      </div>
+      <div class="field">
+        <label>Quota decollo s.l.m. manuale</label>
+        <input type="number" id="manual-takeoff-elevation" placeholder="opzionale, es. 180" step="0.1">
+      </div>
+    </div>
+    <div class="result-note">Le coordinate dell’area di decollo sono opzionali. Se non vengono inserite, la quota da impostare resta uguale alla quota target. Se inserisci coordinate o quote manuali, la quota viene corretta con la differenza s.l.m.</div>
   </div>
 
   <div class="card">
@@ -774,20 +784,30 @@ function formatSignedMeters(v) {
 }
 
 async function fetchElevations(points) {
-  const locations = points.map(p => `${p.lat},${p.lon}`).join('|');
-  const url = `https://api.opentopodata.org/v1/mapzen?locations=${encodeURIComponent(locations)}`;
-  const resp = await fetch(url, { method: 'GET' });
+  // Servizio con CORS normalmente compatibile anche da file locale / webview.
+  const latitudes = points.map(p => p.lat).join(',');
+  const longitudes = points.map(p => p.lon).join(',');
+  const url = `https://api.open-meteo.com/v1/elevation?latitude=${encodeURIComponent(latitudes)}&longitude=${encodeURIComponent(longitudes)}`;
+  const resp = await fetch(url, { method: 'GET', cache: 'no-store' });
   if (!resp.ok) throw new Error(`Servizio quote non disponibile (${resp.status})`);
   const data = await resp.json();
-  if (data.status !== 'OK' || !Array.isArray(data.results) || data.results.length !== points.length) {
+  if (!Array.isArray(data.elevation) || data.elevation.length !== points.length) {
     throw new Error('Risposta quote non valida');
   }
-  return data.results.map((r, idx) => {
-    if (r.elevation === null || typeof r.elevation === 'undefined') {
+  return data.elevation.map((elev, idx) => {
+    if (elev === null || typeof elev === 'undefined' || isNaN(Number(elev))) {
       throw new Error(`Quota non disponibile per ${points[idx].name}`);
     }
-    return { ...points[idx], elevation: Number(r.elevation) };
+    return { ...points[idx], elevation: Number(elev) };
   });
+}
+
+function readManualElevation(id) {
+  const el = document.getElementById(id);
+  const raw = el ? String(el.value || '').trim().replace(',', '.') : '';
+  if (!raw) return null;
+  const v = parseFloat(raw);
+  return isNaN(v) ? NaN : v;
 }
 
 async function calculate() {
@@ -802,11 +822,16 @@ async function calculate() {
   const timeVal = document.getElementById('time').value;
   const tzChoice = document.getElementById('timezone').value;
   const altTarget = parseFloat(String(document.getElementById('altitude').value).replace(',', '.'));
+  const manualObjectiveElevation = readManualElevation('manual-objective-elevation');
+  const manualTakeoffElevation = readManualElevation('manual-takeoff-elevation');
 
   const lat = parseDeg(latRaw);
   const lon = parseDeg(lonRaw);
-  const takeoffLat = parseDeg(takeoffLatRaw);
-  const takeoffLon = parseDeg(takeoffLonRaw);
+  const hasTakeoffLat = String(takeoffLatRaw || '').trim() !== '';
+  const hasTakeoffLon = String(takeoffLonRaw || '').trim() !== '';
+  const hasTakeoffCoords = hasTakeoffLat && hasTakeoffLon;
+  const takeoffLat = hasTakeoffLat ? parseDeg(takeoffLatRaw) : null;
+  const takeoffLon = hasTakeoffLon ? parseDeg(takeoffLonRaw) : null;
 
   if (isNaN(lat) || isNaN(lon)) {
     showError("Coordinate obiettivo non valide. Usa formato 41°44'18.56\"N oppure 41.7385. Sono accettate anche virgole decimali.");
@@ -816,11 +841,15 @@ async function calculate() {
     showError('Coordinate obiettivo fuori intervallo. Latitudine tra -90 e 90, longitudine tra -180 e 180.');
     return;
   }
-  if (isNaN(takeoffLat) || isNaN(takeoffLon)) {
-    showError("Inserisci coordinate valide per l'area di decollo.");
+  if (hasTakeoffLat !== hasTakeoffLon) {
+    showError("Le coordinate dell'area di decollo sono opzionali, ma se le usi devi inserire sia latitudine sia longitudine.");
     return;
   }
-  if (takeoffLat < -90 || takeoffLat > 90 || takeoffLon < -180 || takeoffLon > 180) {
+  if (hasTakeoffCoords && (isNaN(takeoffLat) || isNaN(takeoffLon))) {
+    showError("Coordinate dell'area di decollo non valide. Lasciale vuote oppure inserisci valori corretti.");
+    return;
+  }
+  if (hasTakeoffCoords && (takeoffLat < -90 || takeoffLat > 90 || takeoffLon < -180 || takeoffLon > 180)) {
     showError('Coordinate di decollo fuori intervallo. Latitudine tra -90 e 90, longitudine tra -180 e 180.');
     return;
   }
@@ -830,6 +859,14 @@ async function calculate() {
   }
   if (isNaN(altTarget) || altTarget <= 0) {
     showError('Inserisci una quota valida (> 0 metri).');
+    return;
+  }
+  if (isNaN(manualObjectiveElevation) || isNaN(manualTakeoffElevation)) {
+    showError('Le quote manuali devono essere numeri validi, oppure lascia entrambi i campi vuoti.');
+    return;
+  }
+  if ((manualObjectiveElevation === null) !== (manualTakeoffElevation === null)) {
+    showError('Inserisci entrambe le quote manuali s.l.m., oppure lascia entrambi i campi vuoti per il recupero automatico.');
     return;
   }
   if (tzChoice === 'custom') {
@@ -886,22 +923,35 @@ async function calculate() {
   const projLat = lat + dLat;
   const projLon = lon + dLon;
 
-  let objectiveElevation, takeoffElevation;
-  try {
-    const elevations = await fetchElevations([
-      { lat, lon, name: 'obiettivo' },
-      { lat: takeoffLat, lon: takeoffLon, name: 'decollo' }
-    ]);
-    objectiveElevation = elevations[0].elevation;
-    takeoffElevation = elevations[1].elevation;
-  } catch (e) {
-    showError('Impossibile ricavare le quote s.l.m. dalle coordinate. Controlla la connessione internet o riprova.');
-    return;
-  }
+  let objectiveElevation = null, takeoffElevation = null, elevationSource = 'non calcolata';
+  let terrainDelta = 0;
+  let altitudeCorrection = 0;
+  let adjustedAltitude = altTarget;
 
-  const terrainDelta = objectiveElevation - takeoffElevation;
-  const altitudeCorrection = terrainDelta + 1;
-  const adjustedAltitude = altTarget + altitudeCorrection;
+  if (manualObjectiveElevation !== null && manualTakeoffElevation !== null) {
+    objectiveElevation = manualObjectiveElevation;
+    takeoffElevation = manualTakeoffElevation;
+    elevationSource = 'manuale';
+    terrainDelta = objectiveElevation - takeoffElevation;
+    altitudeCorrection = terrainDelta + 1;
+    adjustedAltitude = altTarget + altitudeCorrection;
+  } else if (hasTakeoffCoords) {
+    try {
+      const elevations = await fetchElevations([
+        { lat, lon, name: 'obiettivo' },
+        { lat: takeoffLat, lon: takeoffLon, name: 'decollo' }
+      ]);
+      objectiveElevation = elevations[0].elevation;
+      takeoffElevation = elevations[1].elevation;
+      elevationSource = 'automatica';
+      terrainDelta = objectiveElevation - takeoffElevation;
+      altitudeCorrection = terrainDelta + 1;
+      adjustedAltitude = altTarget + altitudeCorrection;
+    } catch (e) {
+      showError('Impossibile ricavare automaticamente le quote s.l.m. Il collegamento internet può esserci, ma il browser può bloccare il servizio esterno: inserisci le due quote manualmente nei campi dell’Area di decollo e ricalcola, oppure lascia vuota l’area di decollo per mantenere la quota target invariata.');
+      return;
+    }
+  }
 
   // Display
   document.getElementById('res-elevation').textContent = alpha.toFixed(2) + '°';
@@ -920,12 +970,21 @@ async function calculate() {
   document.getElementById('res-coord-dd').textContent =
     projLat.toFixed(6) + '°, ' + projLon.toFixed(6) + '°';
   document.getElementById('res-adjusted-altitude').textContent = formatMeters(adjustedAltitude);
-  document.getElementById('res-altitude-caption').textContent = `Quota target ${formatMeters(altTarget)} corretta con Δ terreno ${formatSignedMeters(terrainDelta)} e +1 m.`;
-  document.getElementById('res-altitude-details').textContent = `Quota decollo: ${formatMeters(takeoffElevation)} s.l.m. · Quota obiettivo: ${formatMeters(objectiveElevation)} s.l.m. · Correzione totale: ${formatSignedMeters(altitudeCorrection)}.`;
+  if (elevationSource === 'non calcolata') {
+    document.getElementById('res-altitude-caption').textContent = `Area di decollo non inserita: quota target invariata.`;
+    document.getElementById('res-altitude-details').textContent = `Quota da impostare uguale alla quota target: ${formatMeters(altTarget)}.`;
+  } else {
+    document.getElementById('res-altitude-caption').textContent = `Quota target ${formatMeters(altTarget)} corretta con Δ terreno ${formatSignedMeters(terrainDelta)} e +1 m.`;
+    document.getElementById('res-altitude-details').textContent = `Quote (${elevationSource}): decollo ${formatMeters(takeoffElevation)} s.l.m. · obiettivo ${formatMeters(objectiveElevation)} s.l.m. · Correzione totale ${formatSignedMeters(altitudeCorrection)}.`;
+  }
 
   const mapUrl = `https://www.google.com/maps?q=${projLat.toFixed(6)},${projLon.toFixed(6)}`;
   document.getElementById('map-link').href = mapUrl;
-  document.getElementById('result-note').textContent = `Fuso usato: UTC${utcOffset >= 0 ? '+' : ''}${utcOffset}. Quota finale = quota target ${formatMeters(altTarget)} ${terrainDelta >= 0 ? '+' : '−'} scarto altimetrico ${formatMeters(Math.abs(terrainDelta))} + 1 m occhio = ${formatMeters(adjustedAltitude)}. Verifica sempre sul campo.`;
+  if (elevationSource === 'non calcolata') {
+    document.getElementById('result-note').textContent = `Fuso usato: UTC${utcOffset >= 0 ? '+' : ''}${utcOffset}. Area di decollo non inserita: quota finale uguale alla quota target ${formatMeters(altTarget)}. Verifica sempre sul campo.`;
+  } else {
+    document.getElementById('result-note').textContent = `Fuso usato: UTC${utcOffset >= 0 ? '+' : ''}${utcOffset}. Quota finale = quota target ${formatMeters(altTarget)} ${terrainDelta >= 0 ? '+' : '−'} scarto altimetrico ${formatMeters(Math.abs(terrainDelta))} + 1 m occhio = ${formatMeters(adjustedAltitude)}. Verifica sempre sul campo.`;
+  }
 
   document.getElementById('results').style.display = 'block';
   document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
