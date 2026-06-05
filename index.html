@@ -474,9 +474,59 @@ document.addEventListener('DOMContentLoaded', () => {
     text-align: center;
   }
 
+
+  .coord-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .coord-panel {
+    background: rgba(10,10,15,0.22);
+    border: 1px solid rgba(240,192,64,0.18);
+    border-radius: 14px;
+    padding: 18px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .coord-panel.quota-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .coord-subline {
+    margin-top: 8px;
+    font-size: 0.74rem;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .quota-main {
+    font-family: 'SF Mono', ui-monospace, Menlo, Monaco, Consolas, monospace;
+    font-size: clamp(1rem, 3.2vw, 1.35rem);
+    color: var(--accent);
+    font-weight: 700;
+    margin-top: 4px;
+  }
+
+  .quota-main.gold {
+    color: var(--gold);
+  }
+
+  .quota-caption {
+    margin-top: 8px;
+    font-size: 0.74rem;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
   @media (max-width: 480px) {
     .field-grid { grid-template-columns: 1fr; }
     .result-row { grid-template-columns: 1fr; }
+    .coord-grid { grid-template-columns: 1fr; }
     .card { padding: 20px; }
   }
 
@@ -505,7 +555,7 @@ button,a.btn{min-height:48px!important;padding:12px 16px!important;font-weight:6
   <div class="info-box">
     <div class="info-title">Solar Ray Cover</div>
     <div class="info-text"><strong>Creato da M.G.74 · © 2026</strong></div>
-    <div class="info-small">Applicazione locale per il calcolo della posizione del drone rispetto a un osservatore e alla direzione solare.<br><br>I dati inseriti non vengono salvati e non vengono inviati a server esterni. Il GPS viene usato solo se tocchi “Usa posizione attuale”. Se apri Google Maps, le coordinate vengono inviate a Google solo in quel momento.</div>
+    <div class="info-small">Applicazione locale per il calcolo della posizione del drone rispetto a un osservatore e alla direzione solare.<br><br>I dati inseriti non vengono salvati. Il GPS viene usato solo se tocchi “Usa posizione attuale”. Se calcoli la quota corretta del drone, le coordinate dell’obiettivo e dell’area di decollo vengono inviate solo in quel momento a un servizio esterno di elevazione per ricavare le quote s.l.m. Se apri Google Maps, le coordinate vengono inviate a Google solo in quel momento.</div>
     <button class="info-close" onclick="closeInfoModal()">OK</button>
   </div>
 </div>
@@ -545,6 +595,25 @@ button,a.btn{min-height:48px!important;padding:12px 16px!important;font-weight:6
     <div class="small-actions">
       <button class="small-btn" onclick="useCurrentLocation()">📡 Usa posizione attuale</button>
     </div>
+  </div>
+
+
+  <div class="card">
+    <div class="card-title">🚁 Area di decollo</div>
+    <div class="field-grid">
+      <div class="field">
+        <label>Latitudine decollo</label>
+        <input type="text" id="takeoff-lat" placeholder="41°44'18.56&quot;N o 41.7385" value="">
+      </div>
+      <div class="field">
+        <label>Longitudine decollo</label>
+        <input type="text" id="takeoff-lon" placeholder="12°14'48.69&quot;E o 12.2469" value="">
+      </div>
+    </div>
+    <div class="small-actions">
+      <button class="small-btn" onclick="copyObserverToTakeoff()">↔ Copia coordinate osservatore</button>
+    </div>
+    <div class="result-note">Le quote s.l.m. di obiettivo e decollo vengono ricavate automaticamente dalle coordinate tramite un servizio online di elevazione.</div>
   </div>
 
   <div class="card">
@@ -613,16 +682,26 @@ button,a.btn{min-height:48px!important;padding:12px 16px!important;font-weight:6
       <div class="divider"></div>
 
       <div class="coord-display">
-        <div class="coord-label">📍 Coordinate dove posizionare il drone</div>
-        <div class="coord-main" id="res-coord-dms">—</div>
-        <div class="coord-decimal" id="res-coord-dd">—</div>
+        <div class="coord-grid">
+          <div class="coord-panel">
+            <div class="coord-label">📍 Coordinate dove posizionare il drone</div>
+            <div class="coord-main" id="res-coord-dms">—</div>
+            <div class="coord-decimal" id="res-coord-dd">—</div>
+          </div>
+          <div class="coord-panel quota-panel">
+            <div class="coord-label">⛰️ Quota da impostare</div>
+            <div class="quota-main gold" id="res-adjusted-altitude">—</div>
+            <div class="quota-caption" id="res-altitude-caption">Quota target corretta con differenza altimetrica e +1 m.</div>
+          </div>
+        </div>
+        <div class="coord-subline" id="res-altitude-details">—</div>
         <button class="copy-btn" onclick="copyCoords()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
           Copia coordinate
         </button>
         <button class="copy-btn" onclick="shareResult()">↗ Condividi</button>
         <a class="map-link" id="map-link" href="#" target="_blank" rel="noopener noreferrer">→ Apri su Google Maps</a>
-        <div class="result-note" id="result-note">Calcolo indicativo basato su formule solari semplificate. Verifica sempre sul campo.</div>
+        <div class="result-note" id="result-note">Calcolo indicativo basato su formule solari semplificate. La quota viene corretta con le quote s.l.m. di decollo e obiettivo: verifica sempre sul campo.</div>
       </div>
     </div>
   </div>
@@ -683,12 +762,42 @@ function solarDeclination(n) {
   return 23.45 * Math.sin(toRad(360/365*(284+n)));
 }
 
-function calculate() {
+function formatMeters(v) {
+  if (!isFinite(v)) return '—';
+  return Math.abs(v - Math.round(v)) < 0.05 ? `${Math.round(v)} m` : `${v.toFixed(1)} m`;
+}
+
+function formatSignedMeters(v) {
+  if (!isFinite(v)) return '—';
+  const rounded = Math.abs(v - Math.round(v)) < 0.05 ? Math.round(v) : parseFloat(v.toFixed(1));
+  return `${rounded > 0 ? '+' : ''}${rounded} m`;
+}
+
+async function fetchElevations(points) {
+  const locations = points.map(p => `${p.lat},${p.lon}`).join('|');
+  const url = `https://api.opentopodata.org/v1/mapzen?locations=${encodeURIComponent(locations)}`;
+  const resp = await fetch(url, { method: 'GET' });
+  if (!resp.ok) throw new Error(`Servizio quote non disponibile (${resp.status})`);
+  const data = await resp.json();
+  if (data.status !== 'OK' || !Array.isArray(data.results) || data.results.length !== points.length) {
+    throw new Error('Risposta quote non valida');
+  }
+  return data.results.map((r, idx) => {
+    if (r.elevation === null || typeof r.elevation === 'undefined') {
+      throw new Error(`Quota non disponibile per ${points[idx].name}`);
+    }
+    return { ...points[idx], elevation: Number(r.elevation) };
+  });
+}
+
+async function calculate() {
   const errEl = document.getElementById('error');
   errEl.style.display = 'none';
 
   const latRaw = document.getElementById('lat').value;
   const lonRaw = document.getElementById('lon').value;
+  const takeoffLatRaw = document.getElementById('takeoff-lat').value;
+  const takeoffLonRaw = document.getElementById('takeoff-lon').value;
   const dateVal = document.getElementById('date').value;
   const timeVal = document.getElementById('time').value;
   const tzChoice = document.getElementById('timezone').value;
@@ -696,13 +805,23 @@ function calculate() {
 
   const lat = parseDeg(latRaw);
   const lon = parseDeg(lonRaw);
+  const takeoffLat = parseDeg(takeoffLatRaw);
+  const takeoffLon = parseDeg(takeoffLonRaw);
 
   if (isNaN(lat) || isNaN(lon)) {
-    showError("Coordinate non valide. Usa formato 41°44'18.56\"N oppure 41.7385. Sono accettate anche virgole decimali.");
+    showError("Coordinate obiettivo non valide. Usa formato 41°44'18.56\"N oppure 41.7385. Sono accettate anche virgole decimali.");
     return;
   }
   if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-    showError('Coordinate fuori intervallo. Latitudine tra -90 e 90, longitudine tra -180 e 180.');
+    showError('Coordinate obiettivo fuori intervallo. Latitudine tra -90 e 90, longitudine tra -180 e 180.');
+    return;
+  }
+  if (isNaN(takeoffLat) || isNaN(takeoffLon)) {
+    showError("Inserisci coordinate valide per l'area di decollo.");
+    return;
+  }
+  if (takeoffLat < -90 || takeoffLat > 90 || takeoffLon < -180 || takeoffLon > 180) {
+    showError('Coordinate di decollo fuori intervallo. Latitudine tra -90 e 90, longitudine tra -180 e 180.');
     return;
   }
   if (!dateVal || !timeVal) {
@@ -767,6 +886,23 @@ function calculate() {
   const projLat = lat + dLat;
   const projLon = lon + dLon;
 
+  let objectiveElevation, takeoffElevation;
+  try {
+    const elevations = await fetchElevations([
+      { lat, lon, name: 'obiettivo' },
+      { lat: takeoffLat, lon: takeoffLon, name: 'decollo' }
+    ]);
+    objectiveElevation = elevations[0].elevation;
+    takeoffElevation = elevations[1].elevation;
+  } catch (e) {
+    showError('Impossibile ricavare le quote s.l.m. dalle coordinate. Controlla la connessione internet o riprova.');
+    return;
+  }
+
+  const terrainDelta = objectiveElevation - takeoffElevation;
+  const altitudeCorrection = terrainDelta + 1;
+  const adjustedAltitude = altTarget + altitudeCorrection;
+
   // Display
   document.getElementById('res-elevation').textContent = alpha.toFixed(2) + '°';
   document.getElementById('res-azimuth').textContent = az.toFixed(1) + '° (' + azDir(az) + ')';
@@ -783,10 +919,13 @@ function calculate() {
   document.getElementById('res-coord-dms').textContent = dmsLat + '  ' + dmsLon;
   document.getElementById('res-coord-dd').textContent =
     projLat.toFixed(6) + '°, ' + projLon.toFixed(6) + '°';
+  document.getElementById('res-adjusted-altitude').textContent = formatMeters(adjustedAltitude);
+  document.getElementById('res-altitude-caption').textContent = `Quota target ${formatMeters(altTarget)} corretta con Δ terreno ${formatSignedMeters(terrainDelta)} e +1 m.`;
+  document.getElementById('res-altitude-details').textContent = `Quota decollo: ${formatMeters(takeoffElevation)} s.l.m. · Quota obiettivo: ${formatMeters(objectiveElevation)} s.l.m. · Correzione totale: ${formatSignedMeters(altitudeCorrection)}.`;
 
   const mapUrl = `https://www.google.com/maps?q=${projLat.toFixed(6)},${projLon.toFixed(6)}`;
   document.getElementById('map-link').href = mapUrl;
-  document.getElementById('result-note').textContent = `Fuso usato: UTC${utcOffset >= 0 ? '+' : ''}${utcOffset}. Calcolo indicativo basato su formule solari semplificate: verifica sempre sul campo.`;
+  document.getElementById('result-note').textContent = `Fuso usato: UTC${utcOffset >= 0 ? '+' : ''}${utcOffset}. Quota finale = quota target ${formatMeters(altTarget)} ${terrainDelta >= 0 ? '+' : '−'} scarto altimetrico ${formatMeters(Math.abs(terrainDelta))} + 1 m occhio = ${formatMeters(adjustedAltitude)}. Verifica sempre sul campo.`;
 
   document.getElementById('results').style.display = 'block';
   document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -858,14 +997,21 @@ async function useCurrentLocation() {
   );
 }
 
+
+function copyObserverToTakeoff() {
+  document.getElementById('takeoff-lat').value = document.getElementById('lat').value;
+  document.getElementById('takeoff-lon').value = document.getElementById('lon').value;
+}
+
 async function shareResult() {
   const dms = document.getElementById('res-coord-dms').textContent;
   const dd = document.getElementById('res-coord-dd').textContent;
+  const flightAlt = document.getElementById('res-adjusted-altitude').textContent;
   if (!dms || dms === '—') {
     showError('Calcola prima le coordinate da condividere.');
     return;
   }
-  const text = `Solar Ray Cover\nCoordinate drone:\n${dms}\n${dd}\n${document.getElementById('map-link').href}`;
+  const text = `Solar Ray Cover\nCoordinate drone:\n${dms}\n${dd}\nQuota da impostare: ${flightAlt}\n${document.getElementById('map-link').href}`;
   try {
     if (navigator.share) {
       await navigator.share({ title: 'Solar Ray Cover', text });
