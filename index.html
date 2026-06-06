@@ -470,25 +470,38 @@ document.addEventListener('DOMContentLoaded', () => {
     box-shadow: 0 8px 28px rgba(0,0,0,0.20);
   }
 
+
+  body.modal-open {
+    overflow: hidden;
+    touch-action: none;
+  }
+
   .settings-modal {
     display: none;
     position: fixed;
     inset: 0;
     z-index: 55;
     background: rgba(0,0,0,0.72);
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: 22px;
+    padding: max(22px, env(safe-area-inset-top)) 22px max(22px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
   .settings-modal.show { display: flex; }
   .settings-box {
     width: 100%;
     max-width: 420px;
+    max-height: calc(100dvh - 44px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     background: var(--surface);
     border: 1px solid var(--gold2);
     border-radius: 18px;
     padding: 24px;
     box-shadow: 0 20px 70px rgba(0,0,0,0.45);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
   .settings-title {
     font-family: 'SF Mono', ui-monospace, Menlo, Monaco, Consolas, monospace;
@@ -982,24 +995,35 @@ button,a.btn{min-height:48px!important;padding:12px 16px!important;font-weight:6
 <script>
 // Parse DMS or decimal degrees
 function parseDeg(str) {
-  str = String(str || '').trim().toUpperCase().replace(/,/g, '.');
+  const original = String(str || '').trim().toUpperCase().replace(/,/g, '.');
+  const dirMatch = original.match(/([NSEW])\s*$/i);
+  const dir = dirMatch ? dirMatch[1].toUpperCase() : '';
+
   // Decimal, optionally followed by N/S/E/W
-  const dec = str.match(/^([+-]?\d+(?:\.\d+)?)\s*([NSEW])?$/i);
+  const dec = original.match(/^([+-]?\d+(?:\.\d+)?)\s*([NSEW])?$/i);
   if (dec) {
     let v = parseFloat(dec[1]);
-    if (dec[2] && /[SW]/i.test(dec[2])) v = -Math.abs(v);
-    if (dec[2] && /[NE]/i.test(dec[2])) v = Math.abs(v);
+    const decDir = dec[2] ? dec[2].toUpperCase() : dir;
+    if (decDir && /[SW]/i.test(decDir)) v = -Math.abs(v);
+    if (decDir && /[NE]/i.test(decDir)) v = Math.abs(v);
     return v;
   }
-  // DMS: 41°44'18.56"N, also accepts spaces instead of symbols
-  const m = str.match(/([+-]?\d+(?:\.\d+)?)\s*(?:°|D|\s)\s*(\d+(?:\.\d+)?)?\s*(?:'|′|M|\s)?\s*(\d+(?:\.\d+)?)?\s*(?:"|″|S)?\s*([NSEW])?/i);
-  if (m) {
-    const deg = parseFloat(m[1]);
-    const min = m[2] ? parseFloat(m[2]) : 0;
-    const sec = m[3] ? parseFloat(m[3]) : 0;
+
+  // DMS: 41°44'18.56"N, accepts symbols or spaces; final S is treated as South, not seconds.
+  const cleaned = original
+    .replace(/[NSEW]\s*$/i, '')
+    .replace(/[°ºD]/gi, ' ')
+    .replace(/[′'M]/gi, ' ')
+    .replace(/[″"]/g, ' ')
+    .trim();
+  const parts = cleaned.split(/\s+/).filter(Boolean).map(Number);
+  if (parts.length >= 1 && parts.length <= 3 && parts.every(v => !isNaN(v))) {
+    const deg = parts[0];
+    const min = parts[1] || 0;
+    const sec = parts[2] || 0;
     if (min >= 60 || sec >= 60) return NaN;
     let d = Math.abs(deg) + min/60 + sec/3600;
-    if (deg < 0 || (m[4] && /[SW]/i.test(m[4]))) d = -d;
+    if (deg < 0 || /[SW]/i.test(dir)) d = -d;
     return d;
   }
   return NaN;
@@ -1181,6 +1205,7 @@ function askTimezoneChoice(observerInfo, takeoffInfo) {
   document.getElementById('tz-observer-summary').innerHTML = `<strong>Posizione osservatore</strong>${displayTimezoneName(observerInfo.timeZone)} · ${formatUTCOffset(observerInfo.offsetHours)}`;
   document.getElementById('tz-takeoff-summary').innerHTML = `<strong>Area di decollo</strong>${displayTimezoneName(takeoffInfo.timeZone)} · ${formatUTCOffset(takeoffInfo.offsetHours)}`;
   document.getElementById('timezone-choice-modal').classList.add('show');
+  document.body.classList.add('modal-open');
   return new Promise(resolve => { timezoneChoiceResolver = resolve; });
 }
 
@@ -1556,12 +1581,20 @@ async function copyText(text) {
 
 
 function showSettingsModal() {
-  document.getElementById('settings-modal').classList.add('show');
+  const modal = document.getElementById('settings-modal');
+  if (modal) {
+    modal.classList.add('show');
+    const box = modal.querySelector('.settings-box');
+    if (box) box.scrollTop = 0;
+  }
+  document.body.classList.add('modal-open');
   updateThemeButtons();
 }
 
 function closeSettingsModal() {
-  document.getElementById('settings-modal').classList.remove('show');
+  const modal = document.getElementById('settings-modal');
+  if (modal) modal.classList.remove('show');
+  document.body.classList.remove('modal-open');
 }
 
 function openInfoFromSettings() {
@@ -1628,6 +1661,7 @@ function setupHoldToClearCoordinateFields() {
 
 document.addEventListener('DOMContentLoaded',()=>{
   try { setTheme(localStorage.getItem('solar-cover-theme') || 'dark'); } catch(e) { setTheme('dark'); }
+  setupHoldToClearCoordinateFields();
   const takeoffToggle = document.getElementById('takeoff-toggle');
   if (takeoffToggle) {
     takeoffToggle.addEventListener('click', (ev) => {
