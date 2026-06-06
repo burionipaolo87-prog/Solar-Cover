@@ -47,6 +47,20 @@ document.addEventListener('DOMContentLoaded', () => {
     --border: #2a2a3a;
   }
 
+
+  body[data-theme="light"] {
+    --bg: #f7f3ea;
+    --surface: #fffaf0;
+    --surface2: #f0eadf;
+    --gold: #b8860b;
+    --gold2: #946f12;
+    --amber: #c87812;
+    --text: #17151f;
+    --muted: #635b4b;
+    --accent: #006d5b;
+    --border: #d6cbb9;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
@@ -375,6 +389,104 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
+  body[data-theme="light"]::before {
+    background-image:
+      radial-gradient(1px 1px at 10% 15%, rgba(148,111,18,0.16) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 45%, rgba(0,0,0,0.08) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 20%, rgba(0,0,0,0.07) 0%, transparent 100%),
+      radial-gradient(1px 1px at 75% 60%, rgba(148,111,18,0.12) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 10%, rgba(0,0,0,0.07) 0%, transparent 100%);
+  }
+
+  .settings-btn {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 12px);
+    left: calc(env(safe-area-inset-left, 0px) + 14px);
+    z-index: 20;
+    width: 42px;
+    height: 42px;
+    border-radius: 50% !important;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 86%, transparent);
+    color: var(--gold);
+    font-size: 18px !important;
+    font-weight: 700;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.20);
+  }
+
+  .settings-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(0,0,0,0.72);
+    align-items: center;
+    justify-content: center;
+    padding: 22px;
+  }
+  .settings-modal.show { display: flex; }
+  .settings-box {
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--gold2);
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 20px 70px rgba(0,0,0,0.45);
+  }
+  .settings-title {
+    font-family: 'SF Mono', ui-monospace, Menlo, Monaco, Consolas, monospace;
+    color: var(--gold);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    text-align: center;
+  }
+  .settings-section {
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    margin-top: 16px;
+  }
+  .settings-section:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+  .settings-label {
+    font-family: 'SF Mono', ui-monospace, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .settings-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .settings-actions.single { grid-template-columns: 1fr; }
+  .settings-option {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px !important;
+    color: var(--text);
+    font-family: 'SF Mono', ui-monospace, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.75rem;
+    padding: 12px 14px !important;
+    cursor: pointer;
+  }
+  .settings-option.active {
+    border-color: var(--gold2);
+    color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(240,192,64,0.12);
+  }
+  .settings-note {
+    color: var(--muted);
+    font-size: 0.78rem;
+    line-height: 1.45;
+    margin-top: 10px;
+  }
+
   .info-btn {
     position: fixed;
     top: calc(env(safe-area-inset-top, 0px) + 12px);
@@ -475,6 +587,41 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
+  .operational-summary {
+    background: rgba(74,240,200,0.08);
+    border: 1px solid rgba(74,240,200,0.28);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    color: var(--text);
+    font-size: 0.86rem;
+    line-height: 1.55;
+    text-align: left;
+    position: relative;
+    z-index: 1;
+  }
+
+  .operational-summary strong {
+    color: var(--accent);
+    font-family: 'SF Mono', ui-monospace, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .warning-note {
+    display: none;
+    background: rgba(255,152,32,0.10);
+    border: 1px solid rgba(255,152,32,0.38);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin: 14px 0 4px;
+    color: var(--text);
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+
   .coord-grid {
     display: grid;
     grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr);
@@ -550,12 +697,59 @@ button,a.btn{min-height:48px!important;padding:12px 16px!important;font-weight:6
 </style>
 </head>
 <body>
-<button class="info-btn" onclick="showInfoModal()" aria-label="Informazioni">i</button>
+<button class="settings-btn" onclick="showSettingsModal()" aria-label="Impostazioni">⚙</button>
+<div id="settings-modal" class="settings-modal" onclick="if(event.target===this) closeSettingsModal()">
+  <div class="settings-box">
+    <div class="settings-title">Impostazioni</div>
+    <div class="settings-section">
+      <div class="settings-label">Sfondo</div>
+      <div class="settings-actions">
+        <button class="settings-option" id="theme-dark-btn" onclick="setTheme('dark')">Scuro</button>
+        <button class="settings-option" id="theme-light-btn" onclick="setTheme('light')">Chiaro</button>
+      </div>
+      <div class="settings-note">Il tema chiaro usa testo scuro e grigi più marcati per mantenere leggibili etichette, note e risultati.</div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-label">Area di decollo</div>
+      <div class="settings-actions single">
+        <button class="settings-option" onclick="clearTakeoffArea()">Svuota area di decollo</button>
+      </div>
+      <div class="settings-note">Utile per tornare al calcolo senza correzione altimetrica: la quota resta uguale alla quota target AGL.</div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-label">Fuso orario</div>
+      <div class="settings-note">Automatico dalle coordinate. Se osservatore e area di decollo hanno offset diversi, verrà chiesto quale fuso usare.</div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-actions single">
+        <button class="settings-option" onclick="openInfoFromSettings()">Informazioni</button>
+        <button class="settings-option" onclick="closeSettingsModal()">Chiudi</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="timezone-choice-modal" class="settings-modal" onclick="if(event.target===this) selectTimezoneChoice('observer')">
+  <div class="settings-box">
+    <div class="settings-title">Scegli fuso orario</div>
+    <div class="settings-section">
+      <div class="settings-label">Coordinate in fusi diversi</div>
+      <div class="timezone-choice-row" id="tz-observer-summary">—</div>
+      <div class="timezone-choice-row" id="tz-takeoff-summary">—</div>
+      <div class="settings-note">Osservatore e area di decollo risultano in fusi orari diversi. Scegli quale ora locale hai inserito nei parametri solari.</div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-actions">
+        <button class="settings-option" onclick="selectTimezoneChoice('observer')" id="tz-observer-btn">Usa fuso osservatore</button>
+        <button class="settings-option" onclick="selectTimezoneChoice('takeoff')" id="tz-takeoff-btn">Usa fuso decollo</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div id="info-modal" class="info-modal" onclick="if(event.target===this) closeInfoModal()">
   <div class="info-box">
     <div class="info-title">Solar Ray Cover</div>
     <div class="info-text"><strong>Creato da M.G.74 · © 2026</strong></div>
-    <div class="info-small">Applicazione locale per il calcolo della posizione del drone rispetto a un osservatore e alla direzione solare.<br><br>I dati inseriti non vengono salvati. Il GPS viene usato solo se tocchi “Usa posizione attuale”. Se calcoli la quota corretta del drone e non inserisci quote manuali, le coordinate dell’obiettivo e dell’area di decollo vengono inviate solo in quel momento a un servizio esterno di elevazione per ricavare le quote s.l.m. Se apri Google Maps, le coordinate vengono inviate a Google solo in quel momento.</div>
+    <div class="info-small">Applicazione locale per il calcolo della posizione del drone rispetto a un osservatore e alla direzione solare.<br><br>I dati inseriti non vengono salvati. Il GPS viene usato solo se tocchi “Usa posizione attuale”. Quando calcoli, le coordinate possono essere inviate solo in quel momento a servizi esterni per ricavare fuso orario e, se necessario, quote s.l.m. automatiche Se apri Google Maps, le coordinate vengono inviate a Google solo in quel momento.</div>
     <button class="info-close" onclick="closeInfoModal()">OK</button>
   </div>
 </div>
@@ -591,6 +785,11 @@ button,a.btn{min-height:48px!important;padding:12px 16px!important;font-weight:6
         <label>Longitudine</label>
         <input type="text" id="lon" placeholder="12°14'48.69&quot;E o 12.2469" value="12°14'48.69&quot;E">
       </div>
+      <div class="field full">
+        <label>Quota posizione osservatore s.l.m.</label>
+        <input type="number" id="manual-objective-elevation" placeholder="opzionale, es. 140" step="0.1">
+        <span class="hint">Opzionale: se la lasci vuota, quando serve verrà stimata automaticamente dalle coordinate tramite un servizio di elevazione online (stima DEM, non rilievo topografico).</span>
+      </div>
     </div>
     <div class="small-actions">
       <button class="small-btn" onclick="useCurrentLocation()">📡 Usa posizione attuale</button>
@@ -612,18 +811,16 @@ button,a.btn{min-height:48px!important;padding:12px 16px!important;font-weight:6
     </div>
     <div class="small-actions">
       <button class="small-btn" onclick="copyObserverToTakeoff()">↔ Copia coordinate osservatore</button>
+      <button class="small-btn" onclick="clearTakeoffArea()">✕ Svuota area decollo</button>
     </div>
     <div class="field-grid" style="margin-top:16px">
-      <div class="field">
-        <label>Quota obiettivo s.l.m. manuale</label>
-        <input type="number" id="manual-objective-elevation" placeholder="opzionale, es. 140" step="0.1">
-      </div>
-      <div class="field">
-        <label>Quota decollo s.l.m. manuale</label>
+      <div class="field full">
+        <label>Quota decollo s.l.m.</label>
         <input type="number" id="manual-takeoff-elevation" placeholder="opzionale, es. 180" step="0.1">
+        <span class="hint">Opzionale: se inserisci le coordinate di decollo ma lasci vuota la quota, verrà stimata automaticamente tramite un servizio di elevazione online (stima DEM, non rilievo topografico).</span>
       </div>
     </div>
-    <div class="result-note">Le coordinate dell’area di decollo sono opzionali. Se non vengono inserite, la quota da impostare resta uguale alla quota target. Se inserisci coordinate o quote manuali, la quota viene corretta con la differenza s.l.m.</div>
+    <div class="result-note">Le coordinate dell’area di decollo sono opzionali. Se non vengono inserite, la quota da impostare resta uguale alla quota target AGL. Se inserisci coordinate o quote manuali, la quota viene corretta con la differenza s.l.m.</div>
   </div>
 
   <div class="card">
@@ -637,33 +834,17 @@ button,a.btn{min-height:48px!important;padding:12px 16px!important;font-weight:6
         <label>Ora locale</label>
         <input type="time" id="time" value="16:18">
       </div>
-      <div class="field">
-        <label>Fuso orario</label>
-        <select id="timezone">
-          <option value="italy" selected>Italia automatico CET/CEST</option>
-          <option value="local">Automatico dal dispositivo</option>
-          <option value="0">UTC±0</option>
-          <option value="1">UTC+1</option>
-          <option value="2">UTC+2</option>
-          <option value="3">UTC+3</option>
-          <option value="-1">UTC-1</option>
-          <option value="-2">UTC-2</option>
-          <option value="-3">UTC-3</option>
-          <option value="custom">Personalizzato…</option>
-        </select>
-        <span class="hint">Per Italia lascia automatico. All'estero scegli il fuso locale.</span>
-      </div>
-      <div class="field" id="custom-tz-field" style="display:none">
-        <label>UTC personalizzato</label>
-        <input type="number" id="custom-tz" placeholder="es. 4 o -5" value="0" step="0.5" min="-12" max="14">
+      <div class="field full">
+        <label>Fuso orario automatico</label>
+        <div class="hint">Il fuso viene ricavato dalle coordinate dell’osservatore. Se l’area di decollo è in un fuso diverso, verrà chiesto quale usare.</div>
       </div>
       <div class="field full">
-        <label>Quota target (metri sul suolo)</label>
+        <label>Quota target AGL</label>
         <input type="number" id="altitude" placeholder="es. 300" value="300" min="1">
-        <span class="hint">Altitudine a cui deve volare il drone</span>
+        <span class="hint">Quota in metri sopra il terreno/osservatore.</span>
       </div>
     </div>
-    <button class="btn" onclick="calculate()">▶ Calcola proiezione</button>
+    <button class="btn" onclick="calculate()">▶ Calcola posizione e quota</button>
     <div class="error-msg" id="error"></div>
   </div>
 
@@ -687,21 +868,36 @@ button,a.btn{min-height:48px!important;padding:12px 16px!important;font-weight:6
           <div class="result-label">Ora solare vera</div>
           <div class="result-value" id="res-solartime">—</div>
         </div>
+        <div class="result-box">
+          <div class="result-label">Metodo quota</div>
+          <div class="result-value" id="res-elevation-method">—</div>
+        </div>
+        <div class="result-box">
+          <div class="result-label">Distanza da decollo</div>
+          <div class="result-value" id="res-takeoff-distance">—</div>
+        </div>
+        <div class="result-box">
+          <div class="result-label">Direzione da decollo</div>
+          <div class="result-value" id="res-takeoff-bearing">—</div>
+        </div>
       </div>
+
+      <div class="warning-note" id="low-sun-warning">⚠️ Sole basso: il risultato è più sensibile a errori di quota, orario e coordinate.</div>
 
       <div class="divider"></div>
 
       <div class="coord-display">
+        <div class="operational-summary" id="operational-summary"><strong>Riepilogo operativo</strong><br>—</div>
         <div class="coord-grid">
           <div class="coord-panel">
-            <div class="coord-label">📍 Coordinate dove posizionare il drone</div>
+            <div class="coord-label">📍 Punto stimato di copertura solare</div>
             <div class="coord-main" id="res-coord-dms">—</div>
             <div class="coord-decimal" id="res-coord-dd">—</div>
           </div>
           <div class="coord-panel quota-panel">
             <div class="coord-label">⛰️ Quota da impostare</div>
             <div class="quota-main gold" id="res-adjusted-altitude">—</div>
-            <div class="quota-caption" id="res-altitude-caption">Quota target corretta con differenza altimetrica e +1 m.</div>
+            <div class="quota-caption" id="res-altitude-caption">Quota target AGL corretta con differenza altimetrica e +1 m.</div>
           </div>
         </div>
         <div class="coord-subline" id="res-altitude-details">—</div>
@@ -711,7 +907,7 @@ button,a.btn{min-height:48px!important;padding:12px 16px!important;font-weight:6
         </button>
         <button class="copy-btn" onclick="shareResult()">↗ Condividi</button>
         <a class="map-link" id="map-link" href="#" target="_blank" rel="noopener noreferrer">→ Apri su Google Maps</a>
-        <div class="result-note" id="result-note">Calcolo indicativo basato su formule solari semplificate. La quota viene corretta con le quote s.l.m. di decollo e obiettivo: verifica sempre sul campo.</div>
+        <div class="result-note" id="result-note">Calcolo indicativo basato su formule solari semplificate e spostamento geodetico. Le quote automatiche sono stime DEM, non rilievi topografici: verifica sempre sul campo.</div>
       </div>
     </div>
   </div>
@@ -746,6 +942,55 @@ function parseDeg(str) {
 
 function toRad(d) { return d * Math.PI / 180; }
 function toDeg(r) { return r * 180 / Math.PI; }
+
+function destinationPoint(latDeg, lonDeg, distanceMeters, bearingDeg) {
+  // Formula geodetica su sfera terrestre: tiene conto della curvatura terrestre.
+  const R = 6371008.8; // raggio medio terrestre in metri
+  const φ1 = toRad(latDeg);
+  const λ1 = toRad(lonDeg);
+  const θ = toRad(bearingDeg);
+  const δ = distanceMeters / R;
+
+  const sinφ2 = Math.sin(φ1) * Math.cos(δ) +
+                Math.cos(φ1) * Math.sin(δ) * Math.cos(θ);
+  const φ2 = Math.asin(Math.max(-1, Math.min(1, sinφ2)));
+  const y = Math.sin(θ) * Math.sin(δ) * Math.cos(φ1);
+  const x = Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2);
+  let λ2 = λ1 + Math.atan2(y, x);
+
+  // Normalizza longitudine in intervallo -180 / +180.
+  λ2 = ((toDeg(λ2) + 540) % 360) - 180;
+  return { lat: toDeg(φ2), lon: λ2 };
+}
+
+
+function distanceBetweenPoints(lat1, lon1, lat2, lon2) {
+  const R = 6371008.8;
+  const φ1 = toRad(lat1);
+  const φ2 = toRad(lat2);
+  const Δφ = toRad(lat2 - lat1);
+  const Δλ = toRad(lon2 - lon1);
+  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function bearingBetweenPoints(lat1, lon1, lat2, lon2) {
+  const φ1 = toRad(lat1);
+  const φ2 = toRad(lat2);
+  const Δλ = toRad(lon2 - lon1);
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) -
+            Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+function formatDistance(v) {
+  if (!isFinite(v)) return '—';
+  if (v >= 10000) return (v/1000).toFixed(1) + ' km';
+  if (v >= 1000) return (v/1000).toFixed(2) + ' km';
+  return Math.round(v) + ' m';
+}
 
 function decToDMS(deg, isLat) {
   const abs = Math.abs(deg);
@@ -810,6 +1055,90 @@ function readManualElevation(id) {
   return isNaN(v) ? NaN : v;
 }
 
+function formatUTCOffset(hours) {
+  const sign = hours >= 0 ? '+' : '−';
+  const abs = Math.abs(hours);
+  const h = Math.floor(abs);
+  const m = Math.round((abs - h) * 60);
+  return `UTC${sign}${h}${m ? ':' + String(m).padStart(2,'0') : ''}`;
+}
+
+function displayTimezoneName(tz) {
+  return String(tz || '').split('/').pop().replace(/_/g, ' ');
+}
+
+function getOffsetHoursForTimezone(timeZone, year, month, day, hour, minute) {
+  const utcDate = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+  const dtf = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hourCycle: 'h23'
+  });
+  const parts = Object.fromEntries(dtf.formatToParts(utcDate).map(p => [p.type, p.value]));
+  const asUTC = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute), Number(parts.second));
+  return (asUTC - utcDate.getTime()) / 3600000;
+}
+
+async function fetchTimezoneInfo(lat, lon, role, dateParts) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&current=temperature_2m&timezone=auto`;
+  const resp = await fetch(url, { method: 'GET', cache: 'no-store' });
+  if (!resp.ok) throw new Error(`Servizio fuso non disponibile (${resp.status})`);
+  const data = await resp.json();
+  if (!data.timezone) throw new Error('Fuso orario non disponibile');
+  let offsetHours;
+  try {
+    offsetHours = getOffsetHoursForTimezone(data.timezone, dateParts.year, dateParts.month, dateParts.day, dateParts.hour, dateParts.minute);
+  } catch (e) {
+    offsetHours = Number(data.utc_offset_seconds || 0) / 3600;
+  }
+  return {
+    role,
+    lat,
+    lon,
+    timeZone: data.timezone,
+    abbreviation: data.timezone_abbreviation || '',
+    offsetHours
+  };
+}
+
+function formatTimezoneInfo(info) {
+  const name = displayTimezoneName(info.timeZone);
+  const role = info.role === 'takeoff' ? 'area decollo' : 'osservatore';
+  return `${name} (${formatUTCOffset(info.offsetHours)}, ${role})`;
+}
+
+let timezoneChoiceResolver = null;
+let timezoneChoiceOptions = null;
+
+function askTimezoneChoice(observerInfo, takeoffInfo) {
+  timezoneChoiceOptions = { observer: observerInfo, takeoff: takeoffInfo };
+  document.getElementById('tz-observer-summary').innerHTML = `<strong>Posizione osservatore</strong>${displayTimezoneName(observerInfo.timeZone)} · ${formatUTCOffset(observerInfo.offsetHours)}`;
+  document.getElementById('tz-takeoff-summary').innerHTML = `<strong>Area di decollo</strong>${displayTimezoneName(takeoffInfo.timeZone)} · ${formatUTCOffset(takeoffInfo.offsetHours)}`;
+  document.getElementById('timezone-choice-modal').classList.add('show');
+  return new Promise(resolve => { timezoneChoiceResolver = resolve; });
+}
+
+function selectTimezoneChoice(choice) {
+  const modal = document.getElementById('timezone-choice-modal');
+  if (modal) modal.classList.remove('show');
+  const selected = timezoneChoiceOptions && timezoneChoiceOptions[choice === 'takeoff' ? 'takeoff' : 'observer'];
+  if (timezoneChoiceResolver && selected) timezoneChoiceResolver(selected);
+  timezoneChoiceResolver = null;
+  timezoneChoiceOptions = null;
+}
+
+async function resolveCalculationTimezone(args) {
+  const dateParts = { year: args.year, month: args.month, day: args.day, hour: args.hour, minute: args.minute };
+  const observerInfo = await fetchTimezoneInfo(args.lat, args.lon, 'observer', dateParts);
+  if (!args.hasTakeoffCoords) return observerInfo;
+  const takeoffInfo = await fetchTimezoneInfo(args.takeoffLat, args.takeoffLon, 'takeoff', dateParts);
+  if (Math.abs(observerInfo.offsetHours - takeoffInfo.offsetHours) < 0.001) {
+    return observerInfo;
+  }
+  return await askTimezoneChoice(observerInfo, takeoffInfo);
+}
+
 async function calculate() {
   const errEl = document.getElementById('error');
   errEl.style.display = 'none';
@@ -820,7 +1149,6 @@ async function calculate() {
   const takeoffLonRaw = document.getElementById('takeoff-lon').value;
   const dateVal = document.getElementById('date').value;
   const timeVal = document.getElementById('time').value;
-  const tzChoice = document.getElementById('timezone').value;
   const altTarget = parseFloat(String(document.getElementById('altitude').value).replace(',', '.'));
   const manualObjectiveElevation = readManualElevation('manual-objective-elevation');
   const manualTakeoffElevation = readManualElevation('manual-takeoff-elevation');
@@ -862,19 +1190,12 @@ async function calculate() {
     return;
   }
   if (isNaN(manualObjectiveElevation) || isNaN(manualTakeoffElevation)) {
-    showError('Le quote manuali devono essere numeri validi, oppure lascia entrambi i campi vuoti.');
+    showError('Le quote s.l.m. manuali devono essere numeri validi, oppure lascia i campi vuoti.');
     return;
   }
-  if ((manualObjectiveElevation === null) !== (manualTakeoffElevation === null)) {
-    showError('Inserisci entrambe le quote manuali s.l.m., oppure lascia entrambi i campi vuoti per il recupero automatico.');
+  if (!hasTakeoffCoords && manualTakeoffElevation !== null && manualObjectiveElevation === null) {
+    showError('Per usare solo le quote manuali senza coordinate di decollo, inserisci anche la quota della posizione dell’osservatore.');
     return;
-  }
-  if (tzChoice === 'custom') {
-    const customTz = parseFloat(String(document.getElementById('custom-tz').value).replace(',', '.'));
-    if (isNaN(customTz) || customTz < -12 || customTz > 14) {
-      showError('Inserisci un fuso UTC personalizzato valido tra -12 e +14.');
-      return;
-    }
   }
 
   // Parse date/time
@@ -882,7 +1203,15 @@ async function calculate() {
   const [hour, minute] = timeVal.split(':').map(Number);
 
   const localDate = new Date(year, month-1, day, hour, minute, 0);
-  const utcOffset = getSelectedUTCOffset(localDate, tzChoice);
+  let timezoneInfo;
+  try {
+    timezoneInfo = await resolveCalculationTimezone({ lat, lon, takeoffLat, takeoffLon, hasTakeoffCoords, year, month, day, hour, minute });
+  } catch (e) {
+    showError('Impossibile ricavare automaticamente il fuso orario dalle coordinate. Controlla la connessione o riprova tra poco.');
+    return;
+  }
+  const utcOffset = timezoneInfo.offsetHours;
+  const timezoneLabel = formatTimezoneInfo(timezoneInfo);
 
   const n = dayOfYear(new Date(year, month-1, day));
   const δ = solarDeclination(n);
@@ -916,12 +1245,10 @@ async function calculate() {
   // Horizontal distance
   const d = altTarget / Math.tan(toRad(alpha)); // meters
 
-  // Displacement
-  const dLat = d * Math.cos(toRad(az)) / 111320;
-  const dLon = d * Math.sin(toRad(az)) / (111320 * Math.cos(toRad(lat)));
-
-  const projLat = lat + dLat;
-  const projLon = lon + dLon;
+  // Spostamento geodetico: calcola il punto di destinazione su sfera terrestre.
+  const projectedPoint = destinationPoint(lat, lon, d, az);
+  const projLat = projectedPoint.lat;
+  const projLon = projectedPoint.lon;
 
   let objectiveElevation = null, takeoffElevation = null, elevationSource = 'non calcolata';
   let terrainDelta = 0;
@@ -937,20 +1264,41 @@ async function calculate() {
     adjustedAltitude = altTarget + altitudeCorrection;
   } else if (hasTakeoffCoords) {
     try {
-      const elevations = await fetchElevations([
-        { lat, lon, name: 'obiettivo' },
-        { lat: takeoffLat, lon: takeoffLon, name: 'decollo' }
-      ]);
-      objectiveElevation = elevations[0].elevation;
-      takeoffElevation = elevations[1].elevation;
-      elevationSource = 'automatica';
+      const needObjective = manualObjectiveElevation === null;
+      const needTakeoff = manualTakeoffElevation === null;
+      if (needObjective && needTakeoff) {
+        const elevations = await fetchElevations([
+          { lat, lon, name: 'osservatore' },
+          { lat: takeoffLat, lon: takeoffLon, name: 'decollo' }
+        ]);
+        objectiveElevation = elevations[0].elevation;
+        takeoffElevation = elevations[1].elevation;
+        elevationSource = 'automatica';
+      } else if (needObjective) {
+        const elevations = await fetchElevations([{ lat, lon, name: 'osservatore' }]);
+        objectiveElevation = elevations[0].elevation;
+        takeoffElevation = manualTakeoffElevation;
+        elevationSource = 'mista';
+      } else if (needTakeoff) {
+        const elevations = await fetchElevations([{ lat: takeoffLat, lon: takeoffLon, name: 'decollo' }]);
+        objectiveElevation = manualObjectiveElevation;
+        takeoffElevation = elevations[0].elevation;
+        elevationSource = 'mista';
+      }
       terrainDelta = objectiveElevation - takeoffElevation;
       altitudeCorrection = terrainDelta + 1;
       adjustedAltitude = altTarget + altitudeCorrection;
     } catch (e) {
-      showError('Impossibile ricavare automaticamente le quote s.l.m. Il collegamento internet può esserci, ma il browser può bloccare il servizio esterno: inserisci le due quote manualmente nei campi dell’Area di decollo e ricalcola, oppure lascia vuota l’area di decollo per mantenere la quota target invariata.');
+      showError('Impossibile ricavare automaticamente una o più quote s.l.m. Il collegamento internet può esserci, ma il browser può bloccare il servizio esterno: inserisci le quote manualmente e ricalcola, oppure lascia vuota l’area di decollo per mantenere la quota target AGL invariata.');
       return;
     }
+  }
+
+  let takeoffToPointDistance = null;
+  let takeoffToPointBearing = null;
+  if (hasTakeoffCoords) {
+    takeoffToPointDistance = distanceBetweenPoints(takeoffLat, takeoffLon, projLat, projLon);
+    takeoffToPointBearing = bearingBetweenPoints(takeoffLat, takeoffLon, projLat, projLon);
   }
 
   // Display
@@ -963,27 +1311,41 @@ async function calculate() {
   const sh = String(solarHNorm).padStart(2,'0');
   const sm = String(solarMNorm).padStart(2,'0');
   document.getElementById('res-solartime').textContent = sh + ':' + sm;
+  document.getElementById('res-elevation-method').textContent = elevationSource;
+  document.getElementById('res-takeoff-distance').textContent = hasTakeoffCoords ? formatDistance(takeoffToPointDistance) : '—';
+  document.getElementById('res-takeoff-bearing').textContent = hasTakeoffCoords ? `${takeoffToPointBearing.toFixed(1)}° (${azDir(takeoffToPointBearing)})` : '—';
+  const lowSunEl = document.getElementById('low-sun-warning');
+  if (lowSunEl) {
+    lowSunEl.style.display = alpha < 10 ? 'block' : 'none';
+    if (alpha < 10) lowSunEl.textContent = `⚠️ Sole basso (${alpha.toFixed(1)}°): il risultato è più sensibile a errori di quota, orario e coordinate.`;
+  }
 
   const dmsLat = decToDMS(projLat, true);
   const dmsLon = decToDMS(projLon, false);
-  document.getElementById('res-coord-dms').textContent = dmsLat + '  ' + dmsLon;
+  document.getElementById('res-coord-dms').textContent = dmsLat + ' ' + dmsLon;
   document.getElementById('res-coord-dd').textContent =
     projLat.toFixed(6) + '°, ' + projLon.toFixed(6) + '°';
   document.getElementById('res-adjusted-altitude').textContent = formatMeters(adjustedAltitude);
   if (elevationSource === 'non calcolata') {
-    document.getElementById('res-altitude-caption').textContent = `Area di decollo non inserita: quota target invariata.`;
-    document.getElementById('res-altitude-details').textContent = `Quota da impostare uguale alla quota target: ${formatMeters(altTarget)}.`;
+    document.getElementById('res-altitude-caption').textContent = `Area di decollo non inserita: quota target AGL invariata.`;
+    document.getElementById('res-altitude-details').textContent = `Quota target AGL: ${formatMeters(altTarget)} · Correzione altimetrica: 0 m · Quota da impostare: ${formatMeters(adjustedAltitude)}.`;
   } else {
-    document.getElementById('res-altitude-caption').textContent = `Quota target ${formatMeters(altTarget)} corretta con Δ terreno ${formatSignedMeters(terrainDelta)} e +1 m.`;
-    document.getElementById('res-altitude-details').textContent = `Quote (${elevationSource}): decollo ${formatMeters(takeoffElevation)} s.l.m. · obiettivo ${formatMeters(objectiveElevation)} s.l.m. · Correzione totale ${formatSignedMeters(altitudeCorrection)}.`;
+    document.getElementById('res-altitude-caption').textContent = `Quota target AGL ${formatMeters(altTarget)} corretta con Δ terreno ${formatSignedMeters(terrainDelta)} e +1 m.`;
+    document.getElementById('res-altitude-details').textContent = `Quota target AGL: ${formatMeters(altTarget)} · Scarto altimetrico: ${formatSignedMeters(terrainDelta)} · +1 m occhio · Correzione totale: ${formatSignedMeters(altitudeCorrection)} · Quota da impostare: ${formatMeters(adjustedAltitude)}. Quote (${elevationSource}): decollo ${formatMeters(takeoffElevation)} s.l.m. · osservatore ${formatMeters(objectiveElevation)} s.l.m.`;
+  }
+
+  const operationalSummary = document.getElementById('operational-summary');
+  if (operationalSummary) {
+    const takeoffLine = hasTakeoffCoords ? `<br>Distanza da decollo: ${formatDistance(takeoffToPointDistance)} · Direzione: ${takeoffToPointBearing.toFixed(1)}° (${azDir(takeoffToPointBearing)})` : '';
+    operationalSummary.innerHTML = `<strong>Riepilogo operativo</strong><br>Vai a: ${dmsLat} ${dmsLon}<br>Quota: ${formatMeters(adjustedAltitude)} AGL${takeoffLine}<br>Fuso usato: ${timezoneLabel}`;
   }
 
   const mapUrl = `https://www.google.com/maps?q=${projLat.toFixed(6)},${projLon.toFixed(6)}`;
   document.getElementById('map-link').href = mapUrl;
   if (elevationSource === 'non calcolata') {
-    document.getElementById('result-note').textContent = `Fuso usato: UTC${utcOffset >= 0 ? '+' : ''}${utcOffset}. Area di decollo non inserita: quota finale uguale alla quota target ${formatMeters(altTarget)}. Verifica sempre sul campo.`;
+    document.getElementById('result-note').textContent = `Fuso usato: ${timezoneLabel}. Area di decollo non inserita: quota finale uguale alla quota target AGL ${formatMeters(altTarget)}. Verifica sempre sul campo.`;
   } else {
-    document.getElementById('result-note').textContent = `Fuso usato: UTC${utcOffset >= 0 ? '+' : ''}${utcOffset}. Quota finale = quota target ${formatMeters(altTarget)} ${terrainDelta >= 0 ? '+' : '−'} scarto altimetrico ${formatMeters(Math.abs(terrainDelta))} + 1 m occhio = ${formatMeters(adjustedAltitude)}. Verifica sempre sul campo.`;
+    document.getElementById('result-note').textContent = `Fuso usato: ${timezoneLabel}. Quota finale = quota target AGL ${formatMeters(altTarget)} ${terrainDelta >= 0 ? '+' : '−'} scarto altimetrico ${formatMeters(Math.abs(terrainDelta))} + 1 m occhio = ${formatMeters(adjustedAltitude)}. Verifica sempre sul campo.`;
   }
 
   document.getElementById('results').style.display = 'block';
@@ -1025,7 +1387,7 @@ function showError(msg) {
 }
 
 async function copyCoords() {
-  const text = document.getElementById('res-coord-dms').textContent;
+  const text = String(document.getElementById('res-coord-dms').textContent || '').replace(/\s+/g, ' ').trim();
   const btn = document.querySelector('.copy-btn');
   const orig = btn.innerHTML;
   try {
@@ -1036,6 +1398,7 @@ async function copyCoords() {
   }
   setTimeout(() => { btn.innerHTML = orig; }, 1800);
 }
+
 
 
 async function useCurrentLocation() {
@@ -1060,6 +1423,15 @@ async function useCurrentLocation() {
 function copyObserverToTakeoff() {
   document.getElementById('takeoff-lat').value = document.getElementById('lat').value;
   document.getElementById('takeoff-lon').value = document.getElementById('lon').value;
+}
+
+
+function clearTakeoffArea() {
+  document.getElementById('takeoff-lat').value = '';
+  document.getElementById('takeoff-lon').value = '';
+  document.getElementById('manual-takeoff-elevation').value = '';
+  const results = document.getElementById('results');
+  if (results) results.style.display = 'none';
 }
 
 async function shareResult() {
@@ -1097,6 +1469,36 @@ async function copyText(text) {
   document.body.removeChild(ta);
 }
 
+
+function showSettingsModal() {
+  document.getElementById('settings-modal').classList.add('show');
+  updateThemeButtons();
+}
+
+function closeSettingsModal() {
+  document.getElementById('settings-modal').classList.remove('show');
+}
+
+function openInfoFromSettings() {
+  closeSettingsModal();
+  showInfoModal();
+}
+
+function setTheme(theme) {
+  const safeTheme = theme === 'light' ? 'light' : 'dark';
+  document.body.setAttribute('data-theme', safeTheme);
+  try { localStorage.setItem('solar-cover-theme', safeTheme); } catch(e) {}
+  updateThemeButtons();
+}
+
+function updateThemeButtons() {
+  const theme = document.body.getAttribute('data-theme') || 'dark';
+  const darkBtn = document.getElementById('theme-dark-btn');
+  const lightBtn = document.getElementById('theme-light-btn');
+  if (darkBtn) darkBtn.classList.toggle('active', theme === 'dark');
+  if (lightBtn) lightBtn.classList.toggle('active', theme === 'light');
+}
+
 function showInfoModal() {
   document.getElementById('info-modal').classList.add('show');
 }
@@ -1108,11 +1510,7 @@ function closeInfoModal() {
 
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
-  const tzSelect = document.getElementById('timezone');
-  const customTzField = document.getElementById('custom-tz-field');
-  if (tzSelect && customTzField) {
-    tzSelect.addEventListener('change', () => { customTzField.style.display = tzSelect.value === 'custom' ? 'flex' : 'none'; });
-  }
+  try { setTheme(localStorage.getItem('solar-cover-theme') || 'dark'); } catch(e) { setTheme('dark'); }
   document.querySelectorAll('input').forEach(el=>{
     const name=((el.name||'')+' '+(el.id||'')+' '+(el.placeholder||'')).toLowerCase();
     if(/lat|lon|long|coord|quota|alt|metri|target/.test(name)){
